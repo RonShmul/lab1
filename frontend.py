@@ -4,6 +4,7 @@ from backend import *
 window = Tk()
 frame = Frame(window)
 create_table()
+create_ratings_table()
 
 # list box and scroll
 listbox = Listbox(frame)
