@@ -50,7 +50,7 @@ def search_front(): #todo- fix: can search from each field
 
 def add_front():
     listbox.delete(0, END)
-    insert(id_v.get(), title_v.get(), genre_v.get())
+    insert_movie(id_v.get(), title_v.get(), genre_v.get())
 
 def update_front(): #todo- fix: can update each field? including id?
     listbox.delete(0, END)

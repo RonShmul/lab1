@@ -23,11 +23,26 @@ def create_table(): #todo- gives syntax error- handle it?
         cursor.execute('CREATE TABLE if not exists movies (id TEXT PRIMARY KEY,title TEXT,genre TEXT);')
         conn.commit()
         conn.close()
-        insert_from_csv()
+        insert_from_csv('movies.csv')
     except sqlite3.Error as e:
         print(e)
 
-def insert(id, title, genre):
+def create_ratings_table():
+    try:
+        conn = sqlite3.connect('movies.db')
+        cursor = conn.cursor()
+        cursor.execute("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='ratings';")
+        result = cursor.fetchone()
+        if result[0] == 1:
+            return
+        cursor.execute('CREATE TABLE if not exists ratings (user_id TEXT ,movie_id TEXT, rating REAL);')
+        conn.commit()
+        conn.close()
+        insert_from_csv('ratings.csv')
+    except sqlite3.Error as e:
+        print(e)
+
+def insert_movie(id, title, genre):
     try:
         conn, cursor = connect()
         if '|' in genre:
@@ -38,15 +53,29 @@ def insert(id, title, genre):
     except sqlite3.Error as e:
         print(e)
 
-def insert_from_csv():
-    with open('movies.csv', 'r', encoding="utf8") as file:
-        movies = csv.reader(file, delimiter=',')
-        for index,row in enumerate(movies):
-            if index == 0:
-                continue
-            insert(row[0], row[1], row[2])
+def insert_rating(u_id, m_id, rating):
+    try:
+        conn, cursor = connect()
+        cursor.execute('insert into ratings(user_id,movie_id, rating) VALUES(?,?,?);', (u_id, m_id, rating))
+        conn.commit()
+        conn.close()
+    except sqlite3.Error as e:
+        print(e)
 
-@app.route('/', methods=['GET','POST'])
+def insert_from_csv(name):
+    with open(name, 'r', encoding="utf8") as file:
+        movies = csv.reader(file, delimiter=',')
+        if name == 'movies.csv':
+            for index,row in enumerate(movies):
+                if index == 0:
+                    continue
+                insert_movie(row[0], row[1], row[2])
+        else:
+            for index,row in enumerate(movies):
+                if index == 0:
+                    continue
+                insert_rating(row[0], row[1], row[2])
+
 def view_all():
     conn, cursor = connect()
     with conn:
@@ -82,6 +111,11 @@ def check(movie):
         return rows
 
 #request.form['username']
+@app.route('/rec', methods=['GET','POST'])
+def requests():
+    user_id = request.args.get('user_id') #todo: validatioin
+    k = request.args.get('k')
+
 
 if __name__ == '__main__':  # run the server
     with app.app_context():
